@@ -2,9 +2,9 @@ const fetch = require("node-fetch");
 const cheerio = require("cheerio");
 const Sheet = require("./sheet");
 
-(async function () {
+async function scrapePage(i) {
   const res = await fetch(
-    "https://explodingtopics.com/featured-topics-this-year"
+    `https://explodingtopics.com/featured-topics-this-year?page=${i}`
   );
   const text = await res.text();
   const $ = cheerio.load(text);
@@ -16,11 +16,33 @@ const Sheet = require("./sheet");
    const description = active.find('.tileDescription').text();
    const searchesPerMonth = active.find('.scoreTag').first().text().split('mo')[1];
    return {keyword, description, searchesPerMonth}
- });
- console.log({trends});
- const sheet = new Sheet();
- await sheet.load();
- sheet.addRows(trends);
+  })
+  return trends;
+};
+
+
+// Page Iteration
+(async function () {
+  
+    let i = 1;
+    let pages = [];
+   
+    while(true) {
+       const newPage = await scrapePage(i);
+       console.log('new row length', newPage.length);
+        if (newPage.length !== 29) break;
+        pages = pages.concat(newPage);
+        i++;
+        console.log(pages.length,'pages length');
+    }
+
+// Delete Previous Data?
+
+
+console.log(pages.length, "total pages length");
+const sheet = new Sheet();
+await sheet.load();
+ sheet.addRows(pages);
  
  
 })();
